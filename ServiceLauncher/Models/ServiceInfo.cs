@@ -10,7 +10,7 @@ internal class ServiceInfo
 
     public string WorkingPath { get; set; }
 
-    public string ExecutableFileName { get; set; }
+    public string ExecutableFileSubPath { get; set; }
 
     public int Delay { get; set; }
 }

@@ -8,7 +8,7 @@ internal class Service : IAsyncDisposable
 
     public ServiceInfo Info { get; }
 
-    public bool IsRunning => _process?.HasExited == false;
+    public bool IsRunning => _process is not null;
 
     public Service(ServiceInfo info)
     {
@@ -20,14 +20,14 @@ internal class Service : IAsyncDisposable
         if (!IsRunning) return;
         if (_process is not { } process) return;
 
-        var tcs = new TaskCompletionSource();
-        void OnExited(object? sender, EventArgs e) { tcs.TrySetResult(); }
-
-        process.Exited += OnExited;
-        process.EnableRaisingEvents = true;
-
         if (!process.HasExited)
         {
+            var tcs = new TaskCompletionSource();
+            void OnExited(object? sender, EventArgs e) { tcs.TrySetResult(); }
+
+            process.Exited += OnExited;
+            process.EnableRaisingEvents = true;
+
             try
             {
                 process.Kill();
@@ -35,9 +35,11 @@ internal class Service : IAsyncDisposable
                 await tcs.Task.WaitAsync(cts.Token);
             }
             catch { }
+
+            process.Exited -= OnExited;
         }
 
-        process.Exited -= OnExited;
+        _process = null;
         process.Dispose();
     }
 
@@ -45,7 +47,7 @@ internal class Service : IAsyncDisposable
     {
         if (IsRunning) throw new InvalidOperationException();
 
-        var path = Path.Combine(Info.WorkingPath, Info.ExecutableFileName);
+        var path = Path.Combine(Info.WorkingPath, Info.ExecutableFileSubPath);
         var pi = new ProcessStartInfo(path) { };
         if (Process.Start(pi) is { } process)
         {

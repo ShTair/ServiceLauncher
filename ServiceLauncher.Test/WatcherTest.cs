@@ -16,7 +16,7 @@ public class WatcherTest
         _configuration = new ConfigurationBuilder().AddUserSecrets<WatcherTest>().Build();
     }
 
-    [Fact]
+    [Fact(Skip = "old")]
     public async Task ChangedTest()
     {
         var target = _configuration["Watcher:Target"];

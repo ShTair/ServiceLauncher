@@ -31,6 +31,7 @@ internal class Updater : IAsyncDisposable
         await _spacer.InvokeAsync(async () =>
         {
             await _service.StopAsync();
+            await Task.Delay(_info.Delay);
             Update();
             _service.Start();
         });
