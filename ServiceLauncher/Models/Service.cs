@@ -58,3 +58,15 @@ internal class Service : IAsyncDisposable
         await StopAsync();
     }
 }
+
+internal class ServiceFactory
+{
+    public ServiceFactory()
+    {
+    }
+
+    public Service Create(ServiceInfo info)
+    {
+        return new Service(info);
+    }
+}

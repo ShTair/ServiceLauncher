@@ -1,4 +1,5 @@
-﻿using ShComp.Threading;
+﻿using ShComp.IO;
+using ShComp.Threading;
 
 namespace ServiceLauncher.Services;
 
@@ -21,6 +22,7 @@ internal class Updater : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        _watcher.Dispose();
         await _service.DisposeAsync();
     }
 
@@ -29,13 +31,29 @@ internal class Updater : IAsyncDisposable
         await _spacer.InvokeAsync(async () =>
         {
             await _service.StopAsync();
-            await UpdateAsync();
+            Update();
             _service.Start();
         });
     }
 
-    private async Task UpdateAsync()
-    { }
+    public void Update()
+    {
+        if (_service.IsRunning) throw new InvalidOperationException();
+
+        var target = Path.GetFullPath(_info.SourcePath);
+        foreach (var pathInfo in FileUtils.GetPathInfos(target))
+        {
+            var newPath = Path.Combine(_info.WorkingPath, pathInfo.SubPath);
+            if (pathInfo.IsDirectory)
+            {
+                if (!Directory.Exists(newPath)) Directory.CreateDirectory(newPath);
+            }
+            else
+            {
+                File.Copy(pathInfo.Path, newPath, true);
+            }
+        }
+    }
 }
 
 internal class UpdaterFactory
